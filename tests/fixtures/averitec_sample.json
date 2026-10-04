@@ -1,0 +1,242 @@
+[
+ {
+  "claim_id": 0,
+  "claim": "The metro rail figure for region 0 was announced in 2010.",
+  "label": "Supported",
+  "claim_date": "2010-04-01",
+  "speaker": "Speaker 0",
+  "justification": "Synthetic fixture entry.",
+  "questions": [
+   {
+    "question": "What was the metro rail figure for region 0?",
+    "answers": [
+     {
+      "answer": "Official records put the metro rail figure at 100 in 2010.",
+      "answer_type": "Abstractive",
+      "source_url": "https://records0.example.org/metro-rail"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "claim_id": 1,
+  "claim": "The vaccine policy figure for region 1 was announced in 2011.",
+  "label": "Refuted",
+  "claim_date": "2011-04-02",
+  "speaker": "Speaker 1",
+  "justification": "Synthetic fixture entry.",
+  "questions": [
+   {
+    "question": "What was the vaccine policy figure for region 1?",
+    "answers": [
+     {
+      "answer": "Official records put the vaccine policy figure at 101 in 2011.",
+      "answer_type": "Abstractive",
+      "source_url": "https://records1.example.org/vaccine-policy"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "claim_id": 2,
+  "claim": "The import tariff figure for region 2 was announced in 2012.",
+  "label": "Not Enough Evidence",
+  "claim_date": "2012-04-03",
+  "speaker": "Speaker 2",
+  "justification": "Synthetic fixture entry.",
+  "questions": [
+   {
+    "question": "What was the import tariff figure for region 2?",
+    "answers": [
+     {
+      "answer": "Official records put the import tariff figure at 102 in 2012.",
+      "answer_type": "Abstractive",
+      "source_url": "https://records2.example.org/import-tariff"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "claim_id": 3,
+  "claim": "The election turnout figure for region 3 was announced in 2013.",
+  "label": "Conflicting Evidence/Cherrypicking",
+  "claim_date": "2013-04-04",
+  "speaker": "Speaker 3",
+  "justification": "Synthetic fixture entry.",
+  "questions": [
+   {
+    "question": "What was the election turnout figure for region 3?",
+    "answers": [
+     {
+      "answer": "Official records put the election turnout figure at 103 in 2013.",
+      "answer_type": "Abstractive",
+      "source_url": "https://records3.example.org/election-turnout"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "claim_id": 4,
+  "claim": "The metro rail figure for region 4 was announced in 2014.",
+  "label": "Supported",
+  "claim_date": "2014-04-05",
+  "speaker": "Speaker 4",
+  "justification": "Synthetic fixture entry.",
+  "questions": [
+   {
+    "question": "What was the metro rail figure for region 4?",
+    "answers": [
+     {
+      "answer": "Official records put the metro rail figure at 104 in 2014.",
+      "answer_type": "Abstractive",
+      "source_url": "https://records4.example.org/metro-rail"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "claim_id": 5,
+  "claim": "The vaccine policy figure for region 5 was announced in 2015.",
+  "label": "Refuted",
+  "claim_date": "2015-04-06",
+  "speaker": "Speaker 5",
+  "justification": "Synthetic fixture entry.",
+  "questions": [
+   {
+    "question": "What was the vaccine policy figure for region 5?",
+    "answers": [
+     {
+      "answer": "Official records put the vaccine policy figure at 105 in 2015.",
+      "answer_type": "Abstractive",
+      "source_url": "https://records5.example.org/vaccine-policy"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "claim_id": 6,
+  "claim": "The import tariff figure for region 6 was announced in 2016.",
+  "label": "Not Enough Evidence",
+  "claim_date": "2016-04-07",
+  "speaker": "Speaker 6",
+  "justification": "Synthetic fixture entry.",
+  "questions": [
+   {
+    "question": "What was the import tariff figure for region 6?",
+    "answers": [
+     {
+      "answer": "Official records put the import tariff figure at 106 in 2016.",
+      "answer_type": "Abstractive",
+      "source_url": "https://records6.example.org/import-tariff"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "claim_id": 7,
+  "claim": "The election turnout figure for region 7 was announced in 2017.",
+  "label": "Conflicting Evidence/Cherrypicking",
+  "claim_date": "2017-04-08",
+  "speaker": "Speaker 7",
+  "justification": "Synthetic fixture entry.",
+  "questions": [
+   {
+    "question": "What was the election turnout figure for region 7?",
+    "answers": [
+     {
+      "answer": "Official records put the election turnout figure at 107 in 2017.",
+      "answer_type": "Abstractive",
+      "source_url": "https://records7.example.org/election-turnout"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "claim_id": 8,
+  "claim": "The metro rail figure for region 8 was announced in 2018.",
+  "label": "Supported",
+  "claim_date": "2018-04-09",
+  "speaker": "Speaker 8",
+  "justification": "Synthetic fixture entry.",
+  "questions": [
+   {
+    "question": "What was the metro rail figure for region 8?",
+    "answers": [
+     {
+      "answer": "Official records put the metro rail figure at 108 in 2018.",
+      "answer_type": "Abstractive",
+      "source_url": "https://records8.example.org/metro-rail"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "claim_id": 9,
+  "claim": "The vaccine policy figure for region 9 was announced in 2019.",
+  "label": "Refuted",
+  "claim_date": "2019-04-01",
+  "speaker": "Speaker 9",
+  "justification": "Synthetic fixture entry.",
+  "questions": [
+   {
+    "question": "What was the vaccine policy figure for region 9?",
+    "answers": [
+     {
+      "answer": "Official records put the vaccine policy figure at 109 in 2019.",
+      "answer_type": "Abstractive",
+      "source_url": "https://records9.example.org/vaccine-policy"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "claim_id": 10,
+  "claim": "The import tariff figure for region 10 was announced in 2020.",
+  "label": "Not Enough Evidence",
+  "claim_date": "2020-04-02",
+  "speaker": "Speaker 10",
+  "justification": "Synthetic fixture entry.",
+  "questions": [
+   {
+    "question": "What was the import tariff figure for region 10?",
+    "answers": [
+     {
+      "answer": "Official records put the import tariff figure at 110 in 2020.",
+      "answer_type": "Abstractive",
+      "source_url": "https://records10.example.org/import-tariff"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "claim_id": 11,
+  "claim": "The election turnout figure for region 11 was announced in 2021.",
+  "label": "Conflicting Evidence/Cherrypicking",
+  "claim_date": "2021-04-03",
+  "speaker": "Speaker 11",
+  "justification": "Synthetic fixture entry.",
+  "questions": [
+   {
+    "question": "What was the election turnout figure for region 11?",
+    "answers": [
+     {
+      "answer": "Official records put the election turnout figure at 111 in 2021.",
+      "answer_type": "Abstractive",
+      "source_url": "https://records11.example.org/election-turnout"
+     }
+    ]
+   }
+  ]
+ }
+]
