@@ -1,7 +1,8 @@
 # Training the VeriMem verifier
 
-Runs on **GPU-A (RTX 4070, 8 GB)** or **GPU-B (RTX 4050, 6 GB)**, under Linux or WSL2.
-Never on the Mac. Output is a **LoRA adapter** (tens of MB), not a merged model, so it
+**The real 3B runs go on GPU-A (RTX 4070, 8 GB).** GPU-B (RTX 4050, 6 GB) is for the
+Flan-T5 evaluator, embeddings and baselines — it can run the short smoke test, but it does
+not have the memory for 3B training at full sequence length. Linux or WSL2. Never the Mac. Output is a **LoRA adapter** (tens of MB), not a merged model, so it
 is small enough to attach to a GitHub release or push to the Hub.
 
 ## 1. One-time setup (P0.12)
@@ -13,8 +14,13 @@ pip install -r requirements-gpu.txt       # pulls torch, peft, trl, bitsandbytes
 nvidia-smi                                # confirm the GPU and driver
 ```
 
-If `unsloth` will not install, that is fine — pass `--backend peft` and everything still
-works, just slower and with a little more VRAM.
+**Unsloth matters more than it looks.** Qwen2.5 has a ~152k vocabulary, so at long
+sequence lengths the cross-entropy logits tensor dominates memory: at 4,096 tokens it is
+roughly 2.4 GB, and about double that once the backward pass needs its gradient. Unsloth's
+fused cross-entropy never materialises that tensor. With `--backend peft` the 3B
+retrieval-augmented run is not expected to fit in 8 GB at all; with Unsloth it should fit
+comfortably. If Unsloth will not install, say so before falling back to `--backend peft` —
+the fallback is fine for short-sequence smoke tests, not for the real runs.
 
 ## 2. Smoke test — do this first (P2.8)
 
@@ -37,6 +43,40 @@ Check the data pipeline alone, with no GPU and no download:
 python -m training.sft --data training/fixtures/sample_trajectories.jsonl \
     --name check --mode retrieval --dry-run
 ```
+
+## 2b. Headroom test — do this too
+
+The smoke test above runs at roughly **500 tokens** per example. The real runs go up to
+**4,096**. Memory scales with sequence length, so a comfortable smoke test does not prove
+the real run fits. This fixture is built to sit right at the cap (~4,070 tokens):
+
+```bash
+python -m training.make_stress_fixture      # writes data/stress_trajectories.jsonl
+python -m training.sft --data data/stress_trajectories.jsonl \
+    --name headroom --mode retrieval --limit 20 --max-steps 10
+```
+
+Watch peak VRAM in another terminal while it runs:
+
+```bash
+watch -n 1 nvidia-smi --query-gpu=memory.used,memory.total --format=csv
+```
+
+**This number is the one that decides whether the real run fits.** Report it.
+
+If it OOMs, find the ceiling rather than guessing — one command:
+
+```bash
+for S in 1024 2048 3072 4096; do
+  echo "=== seq $S ==="
+  python -m training.sft --data data/stress_trajectories.jsonl \
+      --name "headroom-$S" --mode retrieval --limit 8 --max-steps 4 \
+      --max-seq-length $S 2>&1 | tail -3
+done
+```
+
+Report the largest `$S` that completes. That number sets `max_seq_length` for the real
+runs, and the dataset builder re-budgets evidence and retrieved context to fit it.
 
 ## 3. The real runs (P2.9, P2.10)
 
