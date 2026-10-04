@@ -105,3 +105,16 @@ def score(
 
     metrics.macro_f1 = sum(f1s) / len(f1s) if f1s else 0.0
     return metrics
+
+
+def majority_baseline(gold: Sequence[str]) -> Metrics:
+    """Score of always predicting the most common gold label.
+
+    AVeriTeC is heavily skewed -- "Refuted" is 61% of dev and 57% of train -- so an
+    accuracy figure means little on its own. Every results table should carry this row,
+    because a system below it has learned nothing.
+    """
+    if not gold:
+        return Metrics()
+    most_common = max(set(gold), key=list(gold).count)
+    return score(gold, [most_common] * len(gold))

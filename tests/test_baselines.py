@@ -300,3 +300,19 @@ def test_plain_rag_requires_a_store(tmp_path, monkeypatch):
     monkeypatch.setenv("VERIMEM_API_MODEL", "qwen2.5:7b")
     with pytest.raises(SystemExit, match="--store is required"):
         run_main(["--data", str(CLAIMS_FILE), "--system", "plain_rag", "--limit", "2"])
+
+
+def test_majority_baseline_is_the_floor():
+    from eval.metrics import majority_baseline
+
+    gold = ["Refuted"] * 6 + ["Supported"] * 4
+    m = majority_baseline(gold)
+    assert m.accuracy == 0.6
+    # Always guessing one class cannot score well on macro-F1, which is the point.
+    assert m.macro_f1 < m.accuracy
+
+
+def test_majority_baseline_on_empty_input():
+    from eval.metrics import majority_baseline
+
+    assert majority_baseline([]).n == 0

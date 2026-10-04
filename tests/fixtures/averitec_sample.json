@@ -5,7 +5,7 @@
   "label": "Supported",
   "claim_date": "2010-04-01",
   "speaker": "Speaker 0",
-  "justification": "Synthetic fixture entry.",
+  "justification": "LEAKBAIT_JUSTIFICATION_0 the verdict is Supported because the fact-checker said so.",
   "questions": [
    {
     "question": "What was the metro rail figure for region 0?",
@@ -17,7 +17,9 @@
      }
     ]
    }
-  ]
+  ],
+  "fact_checking_article": "https://LEAKBAIT-factcheck-0.example.org/article",
+  "original_claim_url": "https://LEAKBAIT-origin-0.example.org/post"
  },
  {
   "claim_id": 1,
@@ -25,7 +27,7 @@
   "label": "Refuted",
   "claim_date": "2011-04-02",
   "speaker": "Speaker 1",
-  "justification": "Synthetic fixture entry.",
+  "justification": "LEAKBAIT_JUSTIFICATION_1 the verdict is Refuted because the fact-checker said so.",
   "questions": [
    {
     "question": "What was the vaccine policy figure for region 1?",
@@ -37,7 +39,9 @@
      }
     ]
    }
-  ]
+  ],
+  "fact_checking_article": "https://LEAKBAIT-factcheck-1.example.org/article",
+  "original_claim_url": "https://LEAKBAIT-origin-1.example.org/post"
  },
  {
   "claim_id": 2,
@@ -45,7 +49,7 @@
   "label": "Not Enough Evidence",
   "claim_date": "2012-04-03",
   "speaker": "Speaker 2",
-  "justification": "Synthetic fixture entry.",
+  "justification": "LEAKBAIT_JUSTIFICATION_2 the verdict is Not Enough Evidence because the fact-checker said so.",
   "questions": [
    {
     "question": "What was the import tariff figure for region 2?",
@@ -57,7 +61,9 @@
      }
     ]
    }
-  ]
+  ],
+  "fact_checking_article": "https://LEAKBAIT-factcheck-2.example.org/article",
+  "original_claim_url": "https://LEAKBAIT-origin-2.example.org/post"
  },
  {
   "claim_id": 3,
@@ -65,7 +71,7 @@
   "label": "Conflicting Evidence/Cherrypicking",
   "claim_date": "2013-04-04",
   "speaker": "Speaker 3",
-  "justification": "Synthetic fixture entry.",
+  "justification": "LEAKBAIT_JUSTIFICATION_3 the verdict is Conflicting Evidence/Cherrypicking because the fact-checker said so.",
   "questions": [
    {
     "question": "What was the election turnout figure for region 3?",
@@ -77,7 +83,9 @@
      }
     ]
    }
-  ]
+  ],
+  "fact_checking_article": "https://LEAKBAIT-factcheck-3.example.org/article",
+  "original_claim_url": "https://LEAKBAIT-origin-3.example.org/post"
  },
  {
   "claim_id": 4,
@@ -85,7 +93,7 @@
   "label": "Supported",
   "claim_date": "2014-04-05",
   "speaker": "Speaker 4",
-  "justification": "Synthetic fixture entry.",
+  "justification": "LEAKBAIT_JUSTIFICATION_4 the verdict is Supported because the fact-checker said so.",
   "questions": [
    {
     "question": "What was the metro rail figure for region 4?",
@@ -97,7 +105,9 @@
      }
     ]
    }
-  ]
+  ],
+  "fact_checking_article": "https://LEAKBAIT-factcheck-4.example.org/article",
+  "original_claim_url": "https://LEAKBAIT-origin-4.example.org/post"
  },
  {
   "claim_id": 5,
@@ -105,7 +115,7 @@
   "label": "Refuted",
   "claim_date": "2015-04-06",
   "speaker": "Speaker 5",
-  "justification": "Synthetic fixture entry.",
+  "justification": "LEAKBAIT_JUSTIFICATION_5 the verdict is Refuted because the fact-checker said so.",
   "questions": [
    {
     "question": "What was the vaccine policy figure for region 5?",
@@ -117,7 +127,9 @@
      }
     ]
    }
-  ]
+  ],
+  "fact_checking_article": "https://LEAKBAIT-factcheck-5.example.org/article",
+  "original_claim_url": "https://LEAKBAIT-origin-5.example.org/post"
  },
  {
   "claim_id": 6,
@@ -125,7 +137,7 @@
   "label": "Not Enough Evidence",
   "claim_date": "2016-04-07",
   "speaker": "Speaker 6",
-  "justification": "Synthetic fixture entry.",
+  "justification": "LEAKBAIT_JUSTIFICATION_6 the verdict is Not Enough Evidence because the fact-checker said so.",
   "questions": [
    {
     "question": "What was the import tariff figure for region 6?",
@@ -137,7 +149,9 @@
      }
     ]
    }
-  ]
+  ],
+  "fact_checking_article": "https://LEAKBAIT-factcheck-6.example.org/article",
+  "original_claim_url": "https://LEAKBAIT-origin-6.example.org/post"
  },
  {
   "claim_id": 7,
@@ -145,7 +159,7 @@
   "label": "Conflicting Evidence/Cherrypicking",
   "claim_date": "2017-04-08",
   "speaker": "Speaker 7",
-  "justification": "Synthetic fixture entry.",
+  "justification": "LEAKBAIT_JUSTIFICATION_7 the verdict is Conflicting Evidence/Cherrypicking because the fact-checker said so.",
   "questions": [
    {
     "question": "What was the election turnout figure for region 7?",
@@ -157,7 +171,9 @@
      }
     ]
    }
-  ]
+  ],
+  "fact_checking_article": "https://LEAKBAIT-factcheck-7.example.org/article",
+  "original_claim_url": "https://LEAKBAIT-origin-7.example.org/post"
  },
  {
   "claim_id": 8,
@@ -165,7 +181,7 @@
   "label": "Supported",
   "claim_date": "2018-04-09",
   "speaker": "Speaker 8",
-  "justification": "Synthetic fixture entry.",
+  "justification": "LEAKBAIT_JUSTIFICATION_8 the verdict is Supported because the fact-checker said so.",
   "questions": [
    {
     "question": "What was the metro rail figure for region 8?",
@@ -177,7 +193,9 @@
      }
     ]
    }
-  ]
+  ],
+  "fact_checking_article": "https://LEAKBAIT-factcheck-8.example.org/article",
+  "original_claim_url": "https://LEAKBAIT-origin-8.example.org/post"
  },
  {
   "claim_id": 9,
@@ -185,7 +203,7 @@
   "label": "Refuted",
   "claim_date": "2019-04-01",
   "speaker": "Speaker 9",
-  "justification": "Synthetic fixture entry.",
+  "justification": "LEAKBAIT_JUSTIFICATION_9 the verdict is Refuted because the fact-checker said so.",
   "questions": [
    {
     "question": "What was the vaccine policy figure for region 9?",
@@ -197,7 +215,9 @@
      }
     ]
    }
-  ]
+  ],
+  "fact_checking_article": "https://LEAKBAIT-factcheck-9.example.org/article",
+  "original_claim_url": "https://LEAKBAIT-origin-9.example.org/post"
  },
  {
   "claim_id": 10,
@@ -205,7 +225,7 @@
   "label": "Not Enough Evidence",
   "claim_date": "2020-04-02",
   "speaker": "Speaker 10",
-  "justification": "Synthetic fixture entry.",
+  "justification": "LEAKBAIT_JUSTIFICATION_10 the verdict is Not Enough Evidence because the fact-checker said so.",
   "questions": [
    {
     "question": "What was the import tariff figure for region 10?",
@@ -217,7 +237,9 @@
      }
     ]
    }
-  ]
+  ],
+  "fact_checking_article": "https://LEAKBAIT-factcheck-10.example.org/article",
+  "original_claim_url": "https://LEAKBAIT-origin-10.example.org/post"
  },
  {
   "claim_id": 11,
@@ -225,7 +247,7 @@
   "label": "Conflicting Evidence/Cherrypicking",
   "claim_date": "2021-04-03",
   "speaker": "Speaker 11",
-  "justification": "Synthetic fixture entry.",
+  "justification": "LEAKBAIT_JUSTIFICATION_11 the verdict is Conflicting Evidence/Cherrypicking because the fact-checker said so.",
   "questions": [
    {
     "question": "What was the election turnout figure for region 11?",
@@ -237,6 +259,8 @@
      }
     ]
    }
-  ]
+  ],
+  "fact_checking_article": "https://LEAKBAIT-factcheck-11.example.org/article",
+  "original_claim_url": "https://LEAKBAIT-origin-11.example.org/post"
  }
 ]
