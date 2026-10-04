@@ -1,0 +1,26 @@
+{
+  "train_runtime": 117.1243,
+  "train_samples_per_second": 1.366,
+  "train_steps_per_second": 0.085,
+  "total_flos": 918384586309632.0,
+  "train_loss": 1.81683292388916,
+  "epoch": 3.3333333333333335,
+  "dataset": {
+    "n_examples": 48,
+    "n_skipped": 2,
+    "n_trimmed": 0,
+    "n_with_retrieval": 0,
+    "max_tokens": 703,
+    "mean_tokens": 516.4,
+    "verdict_counts": {
+      "Supported": 14,
+      "Conflicting evidence": 11,
+      "Not enough evidence": 10,
+      "Refuted": 13
+    }
+  },
+  "mode": "plain",
+  "base_model": "Qwen/Qwen2.5-3B-Instruct",
+  "backend": "peft",
+  "lora_r": 16
+}

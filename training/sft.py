@@ -192,6 +192,12 @@ def train(args: TrainArgs) -> Path:
     import torch  # noqa: PLC0415
     from trl import SFTConfig, SFTTrainer  # noqa: PLC0415
 
+    # transformers 5 dropped warmup_ratio; there a float < 1 passed as warmup_steps is a ratio
+    if "warmup_ratio" in SFTConfig.__dataclass_fields__:
+        warmup = {"warmup_ratio": args.warmup_ratio}
+    else:
+        warmup = {"warmup_steps": args.warmup_ratio}
+
     sft_config = SFTConfig(
         output_dir=str(out_dir / "checkpoints"),
         per_device_train_batch_size=args.batch_size,
@@ -199,7 +205,7 @@ def train(args: TrainArgs) -> Path:
         learning_rate=args.learning_rate,
         num_train_epochs=args.epochs,
         max_steps=args.max_steps,
-        warmup_ratio=args.warmup_ratio,
+        **warmup,
         max_length=cfg.max_seq_length,
         logging_steps=10,
         save_steps=cfg.checkpoint_every_steps,
