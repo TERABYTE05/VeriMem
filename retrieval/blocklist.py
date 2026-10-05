@@ -61,10 +61,45 @@ BLOCKED_DOMAINS: frozenset[str] = frozenset(
 BLOCKED_SUBSTRINGS: tuple[str, ...] = ("factcheck", "fact-check", "factchecking")
 
 
+# Archive services wrap the original URL inside their own. Reading the literal host of
+# such a URL gives the archive, not the publisher -- which would both defeat this
+# blocklist and collapse every source in the C3 trust model onto one domain.
+ARCHIVE_HOSTS: frozenset[str] = frozenset(
+    {
+        "web.archive.org",
+        "archive.org",
+        "timetravel.mementoweb.org",
+        "cachedview.nl",
+    }
+)
+
+
+def unwrap_archive(url: str) -> str | None:
+    """The original URL embedded in an archive snapshot, if there is one.
+
+    `https://web.archive.org/web/20201129/https://nbcnews.com/x` -> `https://nbcnews.com/x`
+
+    Archive services that mint opaque ids instead (archive.ph/2Cpq5, perma.cc) carry no
+    embedded URL and cannot be unwrapped; those stay attributed to the archive.
+    """
+    index = max(url.find("http://", 1), url.find("https://", 1))
+    if index <= 0:
+        return None
+    inner = url[index:]
+    return inner if "." in (urlparse(inner).hostname or "") else None
+
+
 def domain_of(url: str) -> str:
-    """Registrable-ish host: lowercased, no port, no leading `www.`."""
-    host = urlparse(url if "//" in url else f"//{url}").hostname or ""
-    host = host.lower()
+    """Publisher host: lowercased, no port, no leading `www.`, archive wrappers removed.
+
+    Returns the *publisher's* domain, not the archive's, so that source trust accrues to
+    `nbcnews.com` rather than to `web.archive.org`.
+    """
+    host = (urlparse(url if "//" in url else f"//{url}").hostname or "").lower()
+    if host in ARCHIVE_HOSTS:
+        inner = unwrap_archive(url)
+        if inner:
+            host = (urlparse(inner).hostname or "").lower()
     return host[4:] if host.startswith("www.") else host
 
 

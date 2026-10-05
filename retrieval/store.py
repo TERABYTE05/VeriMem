@@ -148,3 +148,64 @@ class GoldEvidenceSource:
             Evidence(url=url, text=text, retrieved_by="gold_annotation")
             for url, text in claim.gold_evidence()[:k]
         ]
+
+
+class PooledKnowledgeStore:
+    """One shared corpus for every claim, rather than a per-claim document set.
+
+    The official AVeriTeC store is keyed by claim: each claim comes with its own scraped
+    pages. A store rebuilt from the gold annotations cannot work that way -- if a claim
+    only ever sees its own two or three gold pages, BM25 cannot fail, and the baseline
+    number is meaningless.
+
+    So every page goes into one pool and `claim_id` is ignored. A claim's gold evidence
+    competes with every other claim's, which is the closest honest approximation of
+    retrieval against a real corpus that we can build for free.
+    """
+
+    def __init__(self, path: Path | str, apply_blocklist: bool = True) -> None:
+        self.path = Path(path)
+        self._passages: dict[str, tuple[str, str]] = {}
+        self._index: BM25Index | None = None
+        self.apply_blocklist = apply_blocklist
+
+    def _build(self) -> None:
+        if self._index is not None:
+            return
+        with self.path.open(encoding="utf-8") as fh:
+            for line in fh:
+                line = line.strip()
+                if not line:
+                    continue
+                entry = json.loads(line)
+                for url, passage in _documents(entry):
+                    if self.apply_blocklist and is_blocked(url):
+                        continue
+                    self._passages[f"p{len(self._passages)}"] = (url, passage)
+        self._index = BM25Index((pid, text) for pid, (_, text) in self._passages.items())
+
+    def __len__(self) -> int:
+        self._build()
+        return len(self._passages)
+
+    @property
+    def n_documents(self) -> int:
+        self._build()
+        return len({url for url, _ in self._passages.values()})
+
+    def has(self, claim_id: str) -> bool:
+        self._build()
+        return bool(self._passages)
+
+    def retrieve(self, claim_id: str, query: str, k: int = 5) -> list[Evidence]:
+        self._build()
+        assert self._index is not None
+        return [
+            Evidence(
+                url=self._passages[pid][0],
+                text=self._passages[pid][1],
+                grade=round(score, 4),
+                retrieved_by="archive_pool",
+            )
+            for pid, score in self._index.search(query, k=k)
+        ]

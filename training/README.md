@@ -2,8 +2,13 @@
 
 **The real 3B runs go on GPU-A (RTX 4070, 8 GB).** GPU-B (RTX 4050, 6 GB) is for the
 Flan-T5 evaluator, embeddings and baselines — it can run the short smoke test, but it does
-not have the memory for 3B training at full sequence length. Linux or WSL2. Never the Mac. Output is a **LoRA adapter** (tens of MB), not a merged model, so it
-is small enough to attach to a GitHub release or push to the Hub.
+not have the memory for 3B training at full sequence length. Linux or WSL2. Never the Mac.
+
+Output is a **LoRA adapter** (tens of MB), not a merged model, so it is small enough to
+attach to a GitHub release or push to the Hub.
+
+**Measured on GPU-A, 4 Oct 2026:** Unsloth, 4,096-token examples, **5,318 MiB peak of
+8,188** — it fits, with about 35% headroom. The OOM ladder below should not be needed.
 
 ## 1. One-time setup (P0.12)
 
@@ -62,7 +67,8 @@ Watch peak VRAM in another terminal while it runs:
 watch -n 1 nvidia-smi --query-gpu=memory.used,memory.total --format=csv
 ```
 
-**This number is the one that decides whether the real run fits.** Report it.
+**This number is the one that decides whether the real run fits.** Report it. On GPU-A it
+came back at 5,318 MiB with Unsloth — if yours is far above that, something differs.
 
 If it OOMs, find the ceiling rather than guessing — one command:
 
