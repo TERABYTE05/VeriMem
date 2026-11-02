@@ -322,3 +322,53 @@ def test_rewrite_step_records_every_sub_question(tmp_path):
     r = run_crag(claim(), llm, pool(tmp_path, [NOISE]), LexicalScorer(), cfg)
     rewrite = next(s for s in r.steps if s.action == "rewrite")
     assert "|" in rewrite.detail and rewrite.score == 2.0
+
+
+# --- strip deduplication ------------------------------------------------------------
+
+
+def test_refine_drops_repeated_passages():
+    """The archive extraction repeats passages within a page, and a repeat occupying a
+    top_k slot means the verifier gets the same sentence instead of another source."""
+    from retrieval.refine import refine as _refine
+
+    repeated = "The Kochi Metro began commercial operations in June 2017 after delays."
+    evidence = [
+        Evidence(url="https://a.example/1", text=repeated),
+        Evidence(url="https://a.example/1", text=repeated),
+        Evidence(url="https://b.example/2", text="A second, different passage about it."),
+    ]
+    strips = _refine("Did the Kochi metro open in 2017?", evidence, LexicalScorer(), top_k=5)
+    texts = [s.text for s in strips]
+    assert len(texts) == len(set(texts)), "a duplicate survived refinement"
+    assert len(texts) == 2
+
+
+def test_refine_fills_top_k_with_distinct_strips():
+    """Deduplicating after slicing would silently return fewer than top_k."""
+    from retrieval.refine import refine as _refine
+
+    dup = "The metro opened in June 2017 after several years of construction delays."
+    evidence = [Evidence(url=f"https://a.example/{i}", text=dup) for i in range(4)]
+    evidence += [
+        Evidence(url=f"https://b.example/{i}", text=f"Distinct passage number {i} about the metro.")
+        for i in range(4)
+    ]
+    strips = _refine("Did the Kochi metro open in 2017?", evidence, LexicalScorer(), top_k=3)
+    assert len(strips) == 3
+    assert len({s.text for s in strips}) == 3
+
+
+def test_refine_treats_whitespace_and_case_as_the_same_passage():
+    from retrieval.refine import refine as _refine
+
+    base = "The Kochi Metro began commercial operations in June 2017 after delays."
+    evidence = [
+        Evidence(url="https://a.example/1", text=base),
+        Evidence(
+            url="https://b.example/2",
+            text="  the kochi metro began commercial operations in June 2017 after delays. ",
+        ),
+    ]
+    strips = _refine("Did the Kochi metro open in 2017?", evidence, LexicalScorer(), top_k=5)
+    assert len(strips) == 1

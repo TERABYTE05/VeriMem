@@ -1,0 +1,68 @@
+{
+  "crag": {
+    "n": 300,
+    "accuracy": 0.6333,
+    "macro_f1": 0.3001,
+    "unparseable": 0,
+    "per_class": {
+      "Supported": {
+        "precision": 0.4746,
+        "recall": 0.3944,
+        "f1": 0.4308,
+        "support": 71
+      },
+      "Refuted": {
+        "precision": 0.6722,
+        "recall": 0.9,
+        "f1": 0.7696,
+        "support": 180
+      },
+      "Conflicting evidence": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "support": 25
+      },
+      "Not enough evidence": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "support": 24
+      }
+    },
+    "confusion": {
+      "Supported": {
+        "Supported": 28,
+        "Refuted": 43,
+        "Conflicting evidence": 0,
+        "Not enough evidence": 0
+      },
+      "Refuted": {
+        "Supported": 18,
+        "Refuted": 162,
+        "Conflicting evidence": 0,
+        "Not enough evidence": 0
+      },
+      "Conflicting evidence": {
+        "Supported": 7,
+        "Refuted": 18,
+        "Conflicting evidence": 0,
+        "Not enough evidence": 0
+      },
+      "Not enough evidence": {
+        "Supported": 6,
+        "Refuted": 18,
+        "Conflicting evidence": 0,
+        "Not enough evidence": 0
+      }
+    },
+    "summary": "n=300  accuracy=0.633  macro-F1=0.300\n  Supported              P 0.475  R 0.394  F1 0.431  n=71\n  Refuted                P 0.672  R 0.900  F1 0.770  n=180\n  Conflicting evidence   P 0.000  R 0.000  F1 0.000  n=25\n  Not enough evidence    P 0.000  R 0.000  F1 0.000  n=24"
+  },
+  "usage": {
+    "calls": 125,
+    "cached_calls": 125,
+    "prompt_tokens": 0,
+    "completion_tokens": 0,
+    "cost_usd": 0.0
+  }
+}
