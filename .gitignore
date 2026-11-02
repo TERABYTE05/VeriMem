@@ -67,3 +67,6 @@ verimem-*-results.zip
 
 # Figures are regenerated from results/ by report/make_figures.py
 report/figures/*.png
+
+# Hand-check answers: a human judgement, not derivable from the repo
+data/evaluator/label_review_answers.json
