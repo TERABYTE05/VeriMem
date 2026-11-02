@@ -1,0 +1,16 @@
+{
+  "model": "cross-encoder/ms-marco-MiniLM-L-6-v2",
+  "data": "data/evaluator/relevance_dev.jsonl",
+  "accuracy": 0.5726,
+  "auc": 0.6498,
+  "mean_score_positive": -0.2955,
+  "mean_score_negative": -0.6215,
+  "n": 751,
+  "n_positive": 399,
+  "auc_ci": [
+    0.6111,
+    0.6861
+  ],
+  "trained_auc": 0.8107,
+  "trained_accuracy": 0.7284
+}
