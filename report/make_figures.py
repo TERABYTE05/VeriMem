@@ -310,12 +310,93 @@ def fig_g1_intervals() -> Path:
     return path
 
 
+def fig_trust_divergence() -> Path:
+    """P3.5 -- and it does not show what the plan expected.
+
+    C3 was meant to learn that misinformation domains are unreliable. What it actually
+    learns is which domains appear in *correct verifications*, which is a different thing:
+    a claim citing the Congressional Budget Office is a hard claim, and a claim citing a
+    tweet is often an easy one. The figure shows both halves of that.
+    """
+    from attacks.memory import load_misinfo_domains
+    from experience.format import read_jsonl
+    from experience.store import BetaTrust
+
+    traj = read_jsonl(Path("data/trajectories/trajectories.jsonl"))
+    failed = Path("data/trajectories/trajectories_failed.jsonl")
+    if failed.exists():
+        traj += read_jsonl(failed)
+    trust = BetaTrust()
+    for t in traj:
+        trust.observe(t)
+
+    misinfo = set(load_misinfo_domains(Path("data/averitec/misinfo_list.txt")))
+    seen = trust.as_dict()
+    # Observations beyond the prior, so "well observed" means real evidence.
+    obs = {k: trust.alpha.get(k, 1.0) + trust.beta.get(k, 3.0) - 4.0 for k in seen}
+
+    bad = [v for k, v in seen.items() if k in misinfo]
+    good = [v for k, v in seen.items() if k not in misinfo]
+
+    fig, (ax, bx) = plt.subplots(1, 2, figsize=(10.2, 4.1))
+
+    bins = [i / 20 for i in range(21)]
+    ax.hist(
+        good,
+        bins=bins,
+        density=True,
+        alpha=0.55,
+        color="#0072b2",
+        label=f"other publishers (n={len(good)})",
+    )
+    ax.hist(
+        bad,
+        bins=bins,
+        density=True,
+        alpha=0.55,
+        color="#d55e00",
+        label=f"on AVeriTeC's misinformation list (n={len(bad)})",
+    )
+    ax.axvline(0.3, color="#444444", linestyle=":", linewidth=1.5)
+    ax.annotate("trust floor", xy=(0.31, ax.get_ylim()[1] * 0.60), fontsize=8, color="#444444")
+    ax.set_xlabel("Beta trust  =  alpha / (alpha + beta)")
+    ax.set_ylabel("density")
+    ax.set_title(
+        f"C3 does not separate the two\nmeans {sum(bad) / len(bad):.3f} vs "
+        f"{sum(good) / len(good):.3f}",
+        fontsize=10,
+    )
+    ax.legend(fontsize=7.5, frameon=False, loc="upper left")
+    ax.grid(alpha=0.25, linewidth=0.5)
+
+    # The ordering among domains with real evidence behind them, which is the diagnosis.
+    well = sorted((k for k in seen if obs[k] >= 10), key=lambda k: seen[k])
+    show = well[:7] + well[-7:]
+    ys = range(len(show))
+    colours = ["#d55e00" if k in misinfo else "#0072b2" for k in show]
+    bx.barh(list(ys), [seen[k] for k in show], color=colours, alpha=0.9)
+    bx.axvline(0.3, color="#444444", linestyle=":", linewidth=1.5)
+    bx.set_yticks(list(ys))
+    bx.set_yticklabels([f"{k}  ({int(obs[k])})" for k in show], fontsize=7.5)
+    bx.set_xlabel("Beta trust  (number of observations in brackets)")
+    bx.set_title("What it learned instead: which domains\nappear in correct verdicts", fontsize=10)
+    bx.set_xlim(0, 0.85)
+    bx.grid(alpha=0.25, axis="x", linewidth=0.5)
+
+    fig.tight_layout()
+    path = OUT / "trust_divergence.png"
+    fig.savefig(path, dpi=200)
+    plt.close(fig)
+    return path
+
+
 def main() -> int:
     for fn in (
         fig_memory_poisoning,
         fig_adversary_inversion,
         fig_source_poisoning,
         fig_g1_intervals,
+        fig_trust_divergence,
     ):
         try:
             path = fn()
