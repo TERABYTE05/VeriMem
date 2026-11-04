@@ -44,3 +44,19 @@ python -m eval.report_tables --attack results/2026-10-28_poison-ablation-naive
 - The author block is a placeholder — fill in names and the contribution statement.
 - `ferraz2026exprag` in the bibliography needs its real author list and venue.
 - The ethics statement is written and should not be cut for space.
+
+
+## If the venv misbehaves
+
+It was created at an older path (`Desktop/VeriMem`) and the project has since moved. The
+absolute paths baked into `.venv/bin/*` and `pyvenv.cfg` were repaired on 2026-11-04. If
+`pip` reports a bad interpreter, or `python3` resolves outside the venv while `(.venv)`
+shows in the prompt, the same staleness has returned:
+
+```bash
+grep -rl "Desktop/VeriMem" .venv/ | xargs sed -i '' \
+  's|/Users/teesharamchandani/Desktop/VeriMem|/Users/teesharamchandani/Desktop/NLP-Assignment/VeriMem|g'
+```
+
+The installed packages are unaffected either way; only entry-point shebangs and the
+activate scripts carry absolute paths.
