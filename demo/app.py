@@ -26,7 +26,13 @@ from pathlib import Path
 from typing import Any
 
 from agent.crag import crag
-from attacks.memory import Target, load_misinfo_domains, poison_store, trusted_domains
+from attacks.memory import (
+    FLIP,
+    Target,
+    load_misinfo_domains,
+    poison_store,
+    trusted_domains,
+)
 from core.config import RunConfig
 from core.llm import LLMClient
 from core.paths import DATA_DIR, RESULTS_DIR
@@ -80,11 +86,16 @@ class Backend:
             return None
         trajectories = self.past
         if rate > 0:
+            # FLIP, not a local rule: the demo must attack the same verdict the
+            # experiments measured. A hand-written rule here disagreed with it for
+            # "Conflicting evidence" (FLIP sends it to Supported, the rule sent it to
+            # Refuted), so the demo was showing a different attack from the paper.
+            gold = claim.gold_label or "Refuted"
             target = Target(
                 claim_id=str(claim.id),
                 claim=claim.claim,
-                gold_label=claim.gold_label or "Refuted",
-                target_verdict="Supported" if claim.gold_label == "Refuted" else "Refuted",
+                gold_label=gold,
+                target_verdict=FLIP[gold],
             )
             domains = trusted_domains(self.past, self.trust) if adaptive else self.domains
             trajectories, _ = poison_store(self.past, [target], rate, seed=13, domains=domains)
@@ -183,7 +194,12 @@ def build(backend: Backend):
             rate=rate_pct / 100.0,
             adaptive=adaptive,
         )
-        title = f"{rate_pct}% poisoned · {'adaptive' if adaptive else 'naive'} adversary"
+        wanted = FLIP.get(claim.gold_label or "", "?")
+        landed = "ATTACK SUCCEEDED" if attacked.verdict == wanted else "attack did not land"
+        title = (
+            f"{rate_pct}% poisoned · {'adaptive' if adaptive else 'naive'} adversary · "
+            f"wants {wanted} · {landed}"
+        )
         return left, _panel(title, attacked, backend.trust if trust else None)
 
     with gr.Blocks(title="VeriMem") as app:
