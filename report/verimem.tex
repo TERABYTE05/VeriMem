@@ -1,0 +1,543 @@
+% VeriMem --- ACL-format report.
+%
+% Compiling: this expects the official ACL template files (acl.sty,
+% acl_natbib.bst) alongside it. The simplest route is to create an Overleaf
+% project from the ACL template, then drop in this file, verimem.bib and the
+% figures/ directory. No LaTeX is installed in the project environment, so this
+% has not been compiled here.
+\documentclass[11pt]{article}
+\usepackage[review]{acl}
+
+\usepackage{times}
+\usepackage{latexsym}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{microtype}
+\usepackage{inconsolata}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{amsmath}
+
+\title{VeriMem: Poisoning the Memory of a Retrieval-Augmented Fact-Checking Agent}
+
+\author{
+  Teesha Ramchandani \\
+  Indian Institute of Technology Bhilai \\
+  \texttt{<team emails>}
+}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Retrieval-augmented agents increasingly store their own past trajectories and
+retrieve them as context for new inputs. We ask what an adversary gains from
+writing to that store. We build VeriMem, a fact-checking agent that reproduces
+CRAG \citep{yan2024crag} and ExpRAG \citep{ferraz2026exprag} from scratch and
+transfers both to claim verification on AVeriTeC \citep{schlichtkrull2023averitec},
+and we attack it at two surfaces: the experience store and the evidence corpus.
+Injecting fabricated trajectories raises attack success from $0.220$ to $0.430$
+as the poisoned share rises to 20\%, while an agent with no store stays at
+$0.160$. Two defences --- evaluator gating and Bayesian source trust --- each
+flatten that curve, but \emph{which one does the work inverts with the
+adversary}: against fakes citing unknown domains, trust is decisive and gating
+adds nothing; against an adversary that cites the domains the agent already
+trusts, trust fails completely ($0.460$, identical to undefended) and gating
+carries the defence alone. We show why, by measuring what the trust model
+actually learns: it does not separate known misinformation domains from the rest
+($0.380$ vs.\ $0.375$), and ranks \texttt{twitter.com} above \texttt{nature.com}.
+It is a novelty detector, not a credibility detector. We also report that
+poisoning the evidence corpus is both more effective (attack success $0.690$)
+and less defensible, because fabricated pages are \emph{genuinely relevant} and
+the relevance evaluator scores them almost as highly as real evidence. Both
+reproductions produce honest negative results, and we locate the mechanism for
+each.
+\end{abstract}
+
+\section{Introduction}
+
+A retrieval-augmented agent that keeps a memory of its own past work has a new
+attack surface: the memory. An adversary who can write to it shapes how future
+inputs are judged without touching the model, the retriever, or the evidence
+corpus. The records they write need not be malformed --- a poisoned trajectory
+can be syntactically perfect, which is precisely what makes it hard to find.
+
+We study this concretely. VeriMem is a fact-checking agent: given a claim it
+returns a verdict in \{\textsc{Supported}, \textsc{Refuted}, \textsc{Conflicting
+evidence}, \textsc{Not enough evidence}\} together with an evidence trail ---
+the sources it used, their relevance grades, the trust it assigns each
+publisher, and the past verifications it drew on. It combines two systems we
+reproduce from scratch: CRAG's retrieval evaluator and three-way routing, and
+ExpRAG's trajectory store feeding retrieval-augmented fine-tuning.
+
+Our contributions are:
+
+\begin{enumerate}
+\itemsep0em
+\item \textbf{A memory-poisoning study} (\S\ref{sec:c1}) at 0/5/10/20\%
+  injection, with two adversaries and two attack surfaces. We find that
+  experience retrieval is a real vulnerability (H1), that defences cut attack
+  success (H2), and --- the finding we think matters most --- that the two
+  defences are \emph{complementary rather than redundant}, each failing against
+  the adversary the other stops.
+\item \textbf{Evaluator-gated experience retrieval} (C2), which scores a
+  retrieved trajectory on whether its own evidence supports its own verdict.
+\item \textbf{Bayesian source trust} (C3), and a measurement showing it learns
+  something other than what it was designed to learn (\S\ref{sec:trust}).
+\item \textbf{The first reproduction of ExpRAG} we are aware of, which does not
+  replicate its central claim, with the reason measured (\S\ref{sec:exprag}).
+\end{enumerate}
+
+Every number below carries a bootstrap confidence interval over the evaluation
+set. This is not decoration: macro-F1 on AVeriTeC dev gives a quarter of its
+weight to a 38-instance class on which every system we tested scores near zero,
+and our own early readings of this table were wrong because of it.
+
+\section{Related work}
+
+\paragraph{Corrective retrieval.} CRAG \citep{yan2024crag} adds a fine-tuned
+evaluator that grades retrieved documents and routes on the result: refine,
+rewrite-and-search, or both. Refinement is decompose-then-recompose over
+sentence strips. CRAG reports consistent gains across four QA benchmarks.
+
+\paragraph{Experience replay.} ExpRAG \citep{ferraz2026exprag} stores completed
+agent trajectories and uses them twice --- as fine-tuning data, and as retrieved
+context during supervised fine-tuning, so the model learns to use precedent.
+
+\paragraph{Attacks on retrieval.} Corpus poisoning against RAG is established
+\citep{zou2024poisonedrag, zhong2023poisoning}: an adversary who can insert
+documents can steer generation. Our source-poisoning condition (\S\ref{sec:source})
+is of this family. The memory-poisoning condition is different in kind: the
+adversary writes to the agent's record of \emph{its own reasoning}, and the
+record that eventually does the damage may be one the agent wrote itself.
+
+\paragraph{Fact verification.} AVeriTeC \citep{schlichtkrull2023averitec}
+provides real-world claims with annotated evidence from archived web pages and a
+four-way verdict including two uncertainty labels. The uncertainty labels matter
+here: they give a model somewhere to retreat to, which turns out to drive our
+dominant failure mode (\S\ref{sec:failures}).
+
+\section{VeriMem}
+
+\subsection{Pipeline}
+
+A claim is verified in five steps. (1)~\textbf{Retrieve}: BM25 over a pooled
+corpus built from the archived pages AVeriTeC's annotators cited. (2)~\textbf{Grade}:
+a fine-tuned Flan-T5-base evaluator scores each passage for relevance in
+$[-1,1]$, read as $P(\text{yes})$ against $P(\text{no})$ at the first decoded
+position; the claim's grade is the maximum over passages. (3)~\textbf{Route}:
+two thresholds, fitted on 150 development claims, select refine, rewrite, or
+both. (4)~\textbf{Retrieve experience} (C2): past trajectories, optionally
+gated. (5)~\textbf{Verify}: a verdict from either a prompted teacher or a
+LoRA-fine-tuned student, after which source trust is updated (C3) and the
+trajectory is stored.
+
+Four configuration flags --- \texttt{experience\_retrieval},
+\texttt{gate\_experience}, \texttt{source\_trust}, \texttt{verifier} --- control
+the contributions. With all of them off the pipeline must reproduce the Phase~1
+baseline exactly; a regression test asserts that passing the full Phase~2--3
+machinery to a flags-off run produces byte-identical model calls, and separately
+that each flag changes behaviour when enabled, so an inert flag cannot pass.
+
+\subsection{C2: evaluator-gated experience retrieval}
+
+A retrieved trajectory is scored by the same evaluator that grades evidence,
+but on a different question: \emph{does this trajectory's evidence support the
+verdict it reached?} Our first specification asked instead whether the
+trajectory was relevant to the incoming claim, and it was defeated --- a
+poisoned record is written \emph{about} the target claim, so it is genuinely
+relevant and the evaluator scored it highly, correctly. Relevance is not
+truthfulness. Scoring evidence against the verdict it is supposed to justify is
+a question a fabrication can fail.
+
+\subsection{C3: Bayesian source trust}
+
+Each domain carries a $\mathrm{Beta}(\alpha,\beta)$ posterior with
+$\text{trust} = \alpha/(\alpha+\beta)$, updated by whether the verdict a
+trajectory reached was correct. Trajectories and evidence strips whose domains
+fall below a floor of $0.3$ are dropped.
+
+The prior is $\mathrm{Beta}(1,3)$, not $\mathrm{Beta}(1,1)$. A uniform prior
+places an unseen domain at $0.5$, above any usable floor, so an adversary
+registering fresh domains walks straight through; a model that only distrusts
+domains it has already watched fail cannot defend against a new attacker. Under
+$\mathrm{Beta}(1,3)$ a stranger starts at $0.25$ and must earn its way in. This
+choice turns out to be the whole of C3's effect (\S\ref{sec:trust}).
+
+\section{Experimental setup}
+
+\paragraph{Data.} AVeriTeC. The official knowledge store was withdrawn during
+the project, so we rebuilt a corpus from the Wayback snapshots in the gold
+annotations: 764 documents / 11{,}559 passages for dev, 3{,}468 / 51{,}471 for
+train. Evidence is pooled across claims rather than kept per claim; a per-claim
+pool makes BM25 unable to fail and the baseline meaningless. Fact-checking
+domains are blocklisted, and the blocklist resolves archive wrappers to the
+underlying publisher --- 50 of 961 dev URLs were fact-checkers inside Wayback
+URLs, which would otherwise have passed.
+
+\paragraph{Models.} Teacher and judge: Qwen2.5-7B-Instruct, served locally.
+Student: Qwen2.5-3B-Instruct with QLoRA ($r{=}16$, $\alpha{=}32$, 4-bit base).
+Evaluator: Flan-T5-base. All runs are single-seed with bootstrap intervals;
+see \S\ref{sec:limitations}.
+
+\paragraph{Metrics.} Macro-F1 and accuracy against the four-way gold label. For
+the attacks, \emph{attack success rate} is the fraction of targeted claims that
+receive the adversary's chosen verdict, reported separately from collateral
+degradation --- a defence that cuts attack success by discarding all retrieved
+experience has not defended anything.
+
+\section{Reproducing CRAG}
+\label{sec:crag}
+
+\begin{table}[t]
+\centering\small
+\begin{tabular}{lcc}
+\toprule
+System & Macro-F1 & 95\% CI \\
+\midrule
+No retrieval & 0.324 & [0.288, 0.360] \\
+Plain RAG    & 0.354 & [0.319, 0.388] \\
+CRAG         & 0.363 & [0.324, 0.404] \\
+\midrule
+\multicolumn{3}{l}{\emph{Paired differences}} \\
+Plain RAG $-$ no retr. & $+0.029$ & [$-0.016$, $+0.078$] \\
+CRAG $-$ plain RAG     & $+0.009$ & [$-0.031$, $+0.051$] \\
+CRAG $-$ no retrieval  & $+0.038$ & [$-0.005$, $+0.085$] \\
+\bottomrule
+\end{tabular}
+\caption{AVeriTeC dev, 500 claims. No pairwise difference excludes zero.}
+\label{tab:crag}
+\end{table}
+
+\paragraph{The evaluator reproduces.} Fine-tuned Flan-T5-base reaches AUC
+$0.811$ / accuracy $0.728$ on 751 held-out pairs, against AUC
+$0.650$ $[0.611, 0.686]$ / accuracy $0.573$ for an off-the-shelf
+\texttt{ms-marco-MiniLM} cross-encoder: $+0.161$ AUC from fine-tuning. The
+\emph{reason} is specific. The baseline's accuracy barely clears the
+majority-class floor ($0.531$) while its AUC shows real ranking ability, and its
+mean score on genuinely relevant passages is $-0.296$: it ranks adequately and
+decides in the wrong place. Since CRAG reads two thresholds off this score, a
+misplaced boundary routes nearly everything down one branch however well the
+model ranks. Fine-tuning moved the boundary, not only the ordering.
+
+\paragraph{Routing reproduces.} Fitted thresholds beat the best fixed branch by
+$0.044$ macro-F1, where guessed thresholds beat it by $0.004$.
+
+\paragraph{Refinement does not transfer.} Table~\ref{tab:crag} shows no
+significant pairwise difference. The null is two effects cancelling. Refinement
+keeps the best five \emph{sentences} where plain RAG passes the best five
+\emph{passages}, so the verifier sees 1{,}281 characters of evidence instead of
+3{,}750 --- 66\% less --- and it abstains. CRAG answers \textsc{Not enough
+evidence} 145 times against a gold count of 35; 31.0\% of its predictions are an
+uncertainty label against 14.6\% in gold, while plain RAG sits at 15.2\%,
+almost exactly calibrated. Accuracy falls significantly ($-0.054$
+$[-0.096, -0.012]$) while the two rare classes gain, and macro-F1 --- weighting
+all four equally --- cancels them.
+
+This is a task-transfer limit rather than a failed reproduction. Refinement was
+designed for QA, where a short answer span suffices and surrounding context is
+noise. In fact verification the verdict depends on how much the evidence
+\emph{establishes}, and \textsc{Not enough evidence} is a valid label to retreat
+into. Thinning the evidence by two thirds makes that retreat the easy option.
+
+\section{Reproducing ExpRAG}
+\label{sec:exprag}
+
+\begin{table}[t]
+\centering\small
+\begin{tabular}{llcc}
+\toprule
+Adapter & Retr. & Macro-F1 & Acc. \\
+\midrule
+none            & --- & 0.243 & 0.263 \\
+none            & yes & 0.285 & 0.333 \\
+LoRA SFT        & --- & 0.329 & 0.667 \\
+retrieval-aug.\ SFT & yes & 0.332 & 0.673 \\
+\midrule
+\multicolumn{4}{l}{\emph{filtered targets, for comparison}} \\
+LoRA SFT        & --- & 0.302 & 0.630 \\
+retrieval-aug.\ SFT & yes & 0.300 & 0.633 \\
+\bottomrule
+\end{tabular}
+\caption{AVeriTeC dev, 300 claims, Qwen2.5-3B student.}
+\label{tab:exprag}
+\end{table}
+
+\paragraph{Fine-tuning on the agent's own trajectories works.} Accuracy rises
+$0.263 \rightarrow 0.667$, macro-F1 by $+0.086$ (Table~\ref{tab:exprag}).
+
+\paragraph{The central claim does not replicate.} ExpRAG argues that training
+\emph{with} retrieved trajectories teaches the model to use them, so
+retrieval-augmented SFT should beat plain SFT by more than retrieval alone buys.
+Decomposed against the prompted baseline: retrieval alone $+0.041$, training
+alone $+0.086$, both together $+0.088$ --- a super-additivity of $-0.039$.
+Paired, retrieval-augmented SFT $-$ plain SFT is $+0.002$ $[-0.021, +0.026]$:
+a tight interval, so a measured null rather than an underpowered test.
+
+The prompted-plus-retrieval row is what makes this falsifiable and is the row
+easiest to omit; without it, ``retrieval-augmented SFT is the best row'' cannot
+be distinguished from retrieval merely being available at inference.
+
+\paragraph{Why.} The mechanism fired --- all 1{,}500 training examples carried
+retrieved context --- but the context was empty of signal. Measuring each
+retrieved neighbour's BM25 similarity as a fraction of the claim's own
+self-score: median $0.203$, with only 21.0\% above $0.30$ and 7.3\% above
+$0.50$. In roughly four training examples out of five the two ``relevant past
+verifications'' were barely related to the claim, so the model learned to
+discount the context. That retrieval still helps the \emph{prompted} student
+($+0.041$) fits the same explanation: it was never trained to ignore it.
+
+ExpRAG's premise requires a store dense enough for precedents to exist. AVeriTeC
+spans politics, health and economics across many countries and years, and 1{,}500
+trajectories over that spread do not contain near-neighbours for most claims.
+The result predicts where the method would work: a narrower domain, or a store
+one to two orders of magnitude larger.
+
+\paragraph{Training toward the gold label.} ExpRAG trains on trajectories as
+produced. Keeping only the agent's \emph{correct} verifications starved the
+minority classes --- of 885 usable examples, 5 were \textsc{Conflicting
+evidence}, because those are exactly the claims the agent gets wrong. Training
+toward the claim's gold label instead keeps every labelled trajectory and
+restores the distribution (\textsc{Conflicting} $5 \rightarrow 106$). It gains
+$+0.027$ $[+0.004, +0.052]$ plain and $+0.032$ $[+0.009, +0.056]$ with
+retrieval, both significant. It did not, however, survive training: both
+fine-tuned models score $0.00$ F1 on both uncertainty labels, while the prompted
+model manages $0.13$ and $0.14$. Fine-tuning bought accuracy by abandoning the
+uncertain classes.
+
+\section{Memory poisoning}
+\label{sec:c1}
+
+\subsection{Threat model}
+
+The adversary can write records into the experience store but cannot modify the
+model, the retriever, the evidence corpus, or the gold labels. For a target
+claim they write trajectories that are (a) close enough to be retrieved beside
+it and (b) confidently assert the verdict they want, citing fabricated evidence.
+Every injected record is a syntactically valid trajectory: no format check can
+find them. Fabricated records paraphrase rather than copy the target claim,
+since an identical claim is removed by self-exclusion before it reaches a
+prompt.
+
+We use two adversaries. The \textbf{naive} one cites domains from AVeriTeC's
+published misinformation list. The \textbf{adaptive} one reads the agent's own
+history and cites the five domains it trusts most --- in our run
+\texttt{en.wikipedia.org}, \texttt{twitter.com}, \texttt{cdc.gov},
+\texttt{who.int}, \texttt{ncbi.nlm.nih.gov}.
+
+\subsection{H1: retrieval is the vulnerability}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{figures/memory_poisoning.png}
+\caption{Attack success against poisoned share, 100 targets. No-memory has no
+store to write to.}
+\label{fig:memory}
+\end{figure}
+
+With experience retrieval on, attack success climbs monotonically from $0.220$
+at 0\% to $0.430$ at 20\% poisoning (Figure~\ref{fig:memory}); the intervals at
+the two ends do not overlap. An agent with no store sits at $0.160$. Plain
+retrieval also costs $0.060$ attack success and $0.040$ macro-F1 at \emph{zero}
+poisoning: trajectory accuracy is $0.590$, so clean experience is often wrong
+experience.
+
+\subsection{H2, and the inversion}
+
+\begin{table}[t]
+\centering\small
+\begin{tabular}{lcc}
+\toprule
+Configuration & Naive & Adaptive \\
+\midrule
+memory (undefended) & 0.430 & 0.460 \\
+$+$ gating (C2)     & 0.320 & \textbf{0.310} \\
+$+$ trust (C3)      & \textbf{0.230} & 0.460 \\
+$+$ both            & 0.230 & 0.310 \\
+\midrule
+no memory           & \multicolumn{2}{c}{0.160} \\
+\bottomrule
+\end{tabular}
+\caption{Attack success at 20\% poisoning. Which defence carries H2 inverts with
+the adversary; bold marks the one doing the work.}
+\label{tab:inversion}
+\end{table}
+
+Both defences flatten the curve, so H2 holds. But Table~\ref{tab:inversion}
+shows the result we think is the paper's: \emph{which} defence does it inverts
+entirely. Against the naive adversary, trust alone holds attack success at
+$0.230$ and keeps zero poisoned records, and gating adds nothing. Against the
+adaptive adversary, trust is defeated outright --- $0.460$, identical to
+undefended, with every poisoned record retained --- and gating carries the
+defence alone at $0.310$.
+
+Each defence fails against the adversary the other stops. This is a direct
+argument that C2 and C3 are both necessary; reporting either alone, or only one
+adversary, would have supported the opposite conclusion.
+
+We also note the limit plainly: gated memory under the adaptive attack is
+$0.310$, still nearly double no-memory's $0.160$. The defences reduce the cost
+of having a memory. They do not remove it.
+
+\subsection{What source trust actually learns}
+\label{sec:trust}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{figures/trust_divergence.png}
+\caption{C3 does not separate misinformation domains from the rest, and the
+ordering it does learn is not a credibility ordering.}
+\label{fig:trust}
+\end{figure}
+
+The inversion has a single explanation, and it is uncomfortable. Fitting trust
+on all 1{,}500 trajectories gives 954 domains a track record. Mean trust is
+$0.380$ for the 20 domains on AVeriTeC's misinformation list and $0.375$ for the
+other 934 --- a difference of $0.005$, with the distributions overlapping
+entirely (Figure~\ref{fig:trust}). Among domains with at least ten observations,
+\texttt{twitter.com} is the most trusted at $0.76$, while \texttt{nature.com}
+sits at $0.29$ and \texttt{cbo.gov} at $0.23$.
+
+No credibility model produces that ordering. C3's does, because it is not a
+credibility model: it credits every domain in a trajectory according to whether
+the \emph{verdict} was correct, so what accumulates is ``citing this domain
+coincided with being right''. Claims evidenced by a CBO report are hard; claims
+evidenced by a tweet are often easy.
+
+So C3 stopped the naive adversary not by recognising misinformation but because
+those domains were \emph{unseen}, and $\mathrm{Beta}(1,3)$ places a stranger
+below the floor. It is a \textbf{novelty detector}. The adaptive adversary
+defeats it by ceasing to be novel. The two results are one mechanism.
+
+\subsection{Source poisoning}
+\label{sec:source}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{figures/source_poisoning.png}
+\caption{Poisoning the evidence corpus, and the reason gating cannot defend it.}
+\label{fig:source}
+\end{figure}
+
+Writing fabricated \emph{pages} into the evidence pool is both more effective
+and less defensible. Attack success rises $0.190 \rightarrow 0.690$ at five
+fabricated pages per target, against memory poisoning's $0.430$ ceiling, and
+macro-F1 collapses from $0.374$ to $0.178$ --- unlike memory poisoning, this
+attack is broadly destructive rather than surgical.
+
+Gating cannot help, and Figure~\ref{fig:source} measures why rather than
+asserting it. A fabricated page is written about the target claim in detail: it
+\emph{is} relevant, and the evaluator is right to say so. Mean relevance grade
+on fabricated evidence is $0.667$ against $0.740$ on real evidence at one page
+per target, narrowing to $0.605$ against $0.643$ at five. Gaps of $0.02$--$0.07$
+on a $[-1,1]$ scale leave the gate no signal to act on.
+
+Trust reduces the attack ($0.690 \rightarrow 0.440$ at five pages) but against
+the adaptive adversary it does nothing at all: $0.620$ against an undefended
+$0.630$, with every fabricated strip retained. Against an adversary that
+impersonates trusted publishers, VeriMem has no defence at this surface.
+
+\subsection{Propagation}
+
+If a poisoned record makes the agent misjudge claim $A$, and $A$'s verdict is
+then stored, does it contaminate a neighbouring claim $B$? The record doing the
+harm at that point is not fabricated --- it is the pipeline's own output citing
+real publishers, so C2 sees a coherent trajectory and C3 sees ordinary domains.
+
+We paired each of 100 targets with its nearest different claim by BM25
+similarity relative to the target's self-score, excluding duplicates, giving 77
+pairs. Each neighbour was verified three times against stores differing
+\emph{only} in $A$'s verdict: absent, clean, corrupted.
+
+Of 28 targets the attack actually flipped, \textbf{0 propagated}. The channel
+existed --- $A$'s trajectory was retrieved in 67 of 77 pairs under both the
+clean and corrupted conditions, and 0 of 77 under absent --- so the poisoned
+verdict reached $B$'s prompt and $B$'s answer did not move. With 28 trials the
+honest statement is that one-hop propagation is below roughly 10\%, not that it
+is zero. We attribute the null to the neighbour being recognisably a different
+claim at median relative similarity $0.23$; direct memory poisoning works
+because the fake paraphrases its target.
+
+\section{Where the errors come from}
+\label{sec:failures}
+
+Categorising all 227 errors on dev by predicates over each trajectory's own
+record: \textbf{over-abstention is 52.9\%} --- answering \textsc{Not enough
+evidence} where the gold label is definite. False confidence is 20.3\% and
+polarity flips 20.3\%.
+
+Only 11 of 227 errors (5\%) had no strip graded above $+0.3$. In the other 95\%
+the evaluator judged the evidence relevant and the verifier still erred, so the
+failure is in verification, not retrieval --- which contradicts the intuitive
+diagnosis. A representative case: a claim graded $0.9825$ and routed
+\texttt{correct} received \textsc{Not enough evidence}, the verifier reasoning
+that the evidence said nothing about the specific person named. Both components
+were right about their own input; the passages were on-topic, which is what the
+evaluator scores, and the surviving sentences had lost the specific fact, which
+is what the verifier needed.
+
+The clearest next change this points at is passing refined strips \emph{alongside}
+more of their surrounding passage rather than instead of it.
+
+\section{Limitations}
+\label{sec:limitations}
+
+\paragraph{The evaluator has saturated its own labels.} A human hand-check of 95
+sampled pairs puts label noise at $0.289$ (reweighted to the dev distribution;
+positives are the worst class at $0.360$). A classifier perfect against truth
+would score about $0.711$ accuracy against labels that noisy, and our evaluator
+scores $0.728$ --- \emph{above} that ceiling, which means its errors correlate
+with the labeller's. Accuracy $0.728$ reads as ``agrees 73\% of the time with a
+labelling that is itself 29\% wrong''. The cross-encoder comparison narrows
+correspondingly: part of the $+0.161$ AUC is a better match to this labelling
+rather than to relevance, and the two cannot be separated without clean labels.
+The calibration finding stands independently. CRAG's thresholds were fitted
+against the same noisy score.
+
+\paragraph{Single seed.} Every reported number carries a bootstrap interval over
+the evaluation set, which answers whether a difference survives a different draw
+of claims; it does not capture variance from training seeds.
+
+\paragraph{Evaluation split.} A held-out-\emph{topic} split was planned and not
+built. Results are on an AVeriTeC dev subset, which is held out from the
+trajectories' source split but not by topic.
+
+\paragraph{Scale.} 1{,}500 trajectories, one 3B student, one 7B teacher. The
+ExpRAG result in particular is partly a statement about that budget.
+
+\paragraph{Deviations.} Retrieval is BM25 rather than FAISS over embeddings
+(deterministic, and shared with passage retrieval, which matters when comparing
+runs differing only in a store's contents). The agent is plain Python rather
+than a graph framework. Evidence strips were not deduplicated when these runs
+were made; repeats cost 5.2\% of evidence slots, measured, and the code was
+fixed afterwards without re-running.
+
+\section{Conclusion}
+
+An agent that remembers its own work can be attacked through that memory, and
+the attack scales with how much of the store the adversary controls. Two
+defences each appear sufficient in isolation and neither is: evaluator gating
+and source trust fail against different adversaries, and a study using only one
+adversary would have concluded that either alone suffices. The trust model in
+particular does not do what it was designed to do --- it detects novelty, not
+unreliability --- which is both why it stops an attacker using unknown domains
+and why it offers nothing against one that cites the agent's own favourites.
+
+\section*{Ethics statement}
+
+All fabricated pages and trajectories exist only to attack our own system. They
+are generated with fixed seeds into a gitignored directory, assembled in memory
+for a run and discarded; no fabricated content is written into the evidence
+corpus on disk, served, or published. Attack domains are drawn from AVeriTeC's
+own published list of known misinformation sites, so the study does not invent
+new disinformation and does not attribute fabricated claims to a publisher that
+has done nothing. We report a genuine weakness in a class of system that is
+being deployed; we judge that describing the attack surface and two partial
+defences is more useful than withholding it, particularly as the stronger
+adaptive attack requires only reading a system's own public source history.
+
+\bibliography{verimem}
+\bibliographystyle{acl_natbib}
+
+\end{document}
