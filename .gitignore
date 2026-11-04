@@ -70,3 +70,6 @@ report/figures/*.png
 
 # Hand-check answers: a human judgement, not derivable from the repo
 data/evaluator/label_review_answers.json
+
+# Demo shortlist: regenerate with `python -m demo.find_cases`
+demo/demo_cases.json
