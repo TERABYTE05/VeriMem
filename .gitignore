@@ -73,3 +73,9 @@ data/evaluator/label_review_answers.json
 
 # Demo shortlist: regenerate with `python -m demo.find_cases`
 demo/demo_cases.json
+
+# Built paper: rebuild with `tectonic -X compile report/verimem.tex`
+report/*.pdf
+report/*.log
+report/*.blg
+report/*.aux

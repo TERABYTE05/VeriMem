@@ -1,12 +1,15 @@
 % VeriMem --- ACL-format report.
 %
-% Compiling: this expects the official ACL template files (acl.sty,
-% acl_natbib.bst) alongside it. The simplest route is to create an Overleaf
-% project from the ACL template, then drop in this file, verimem.bib and the
-% figures/ directory. No LaTeX is installed in the project environment, so this
-% has not been compiled here.
+% Compiling: needs acl.sty and acl_natbib.bst beside this file (both are in the
+% repo, fetched from github.com/acl-org/acl-style-files). Builds clean with
+%     tectonic -X compile verimem.tex
+% or on Overleaf from the ACL template. Do not add \bibliographystyle: acl.sty
+% already issues it, and a second one makes BibTeX drop every reference.
 \documentclass[11pt]{article}
-\usepackage[review]{acl}
+% Not [review]: that option anonymises the author block to "Anonymous ACL
+% submission" and adds line numbers. This is a course submission, so the names
+% belong on it. Switch back to [review] only for an actual blind submission.
+\usepackage{acl}
 
 \usepackage{times}
 \usepackage{latexsym}
@@ -21,10 +24,11 @@
 
 \title{VeriMem: Poisoning the Memory of a Retrieval-Augmented Fact-Checking Agent}
 
+% TODO before submitting: add the other four team members and the real emails.
 \author{
   Teesha Ramchandani \\
   Indian Institute of Technology Bhilai \\
-  \texttt{<team emails>}
+  \texttt{<email>}
 }
 
 \begin{document}
@@ -372,9 +376,22 @@ adaptive adversary, trust is defeated outright --- $0.460$, identical to
 undefended, with every poisoned record retained --- and gating carries the
 defence alone at $0.310$.
 
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{figures/adversary_inversion.png}
+\caption{The same cells as Table~\ref{tab:inversion} with their intervals. The
+reversal between the two defences is wider than the uncertainty on it; the
+narrower comparisons between neighbouring bars are not.}
+\label{fig:inversion}
+\end{figure}
+
 Each defence fails against the adversary the other stops. This is a direct
 argument that C2 and C3 are both necessary; reporting either alone, or only one
-adversary, would have supported the opposite conclusion.
+adversary, would have supported the opposite conclusion. Figure~\ref{fig:inversion}
+shows the same cells with their intervals, which is the honest form of the
+claim: trust moving from $0.230$ to $0.460$ between adversaries is far outside
+the uncertainty, while the gap between gating and trust at a single adversary is
+not.
 
 We also note the limit plainly: gated memory under the adaptive attack is
 $0.310$, still nearly double no-memory's $0.160$. The defences reduce the cost
@@ -537,7 +554,8 @@ being deployed; we judge that describing the attack surface and two partial
 defences is more useful than withholding it, particularly as the stronger
 adaptive attack requires only reading a system's own public source history.
 
+% acl.sty already issues \bibliographystyle{acl_natbib}; a second one makes BibTeX
+% skip the command and silently drop every reference.
 \bibliography{verimem}
-\bibliographystyle{acl_natbib}
 
 \end{document}

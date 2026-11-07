@@ -1,15 +1,27 @@
 # The report
 
-`verimem.tex` is written against the **ACL template**, which is not vendored here.
-No LaTeX is installed in the project environment, so it has not been compiled.
+`verimem.tex` builds to **7 pages with 4 figures**, references on page 7. `acl.sty` and
+`acl_natbib.bst` are vendored here, taken from
+[acl-org/acl-style-files](https://github.com/acl-org/acl-style-files).
 
 ## To build it
 
-1. Create an Overleaf project from the official ACL template (it supplies `acl.sty`
-   and `acl_natbib.bst`).
-2. Upload `verimem.tex`, `verimem.bib`, and the whole `figures/` directory.
-3. Compile. Switch `\usepackage[review]{acl}` to `\usepackage{acl}` for the camera-ready
-   version, which removes the line numbers.
+```bash
+tectonic -X compile report/verimem.tex
+```
+
+Tectonic is a single self-contained binary that fetches what it needs on demand — far
+lighter than a full TeX install. Homebrew could not reach `ghcr.io` on this machine, so
+it was installed from the GitHub release directly. Overleaf works too: upload
+`verimem.tex`, `verimem.bib`, `acl.sty`, `acl_natbib.bst` and `figures/`.
+
+Two things that will break the build if changed:
+
+- **Do not add `\bibliographystyle`.** `acl.sty` already issues it, and a second one makes
+  BibTeX skip the command and silently drop every reference — the PDF still compiles,
+  just with no bibliography.
+- **`\usepackage{acl}`, not `[review]`.** The review option anonymises the author block to
+  "Anonymous ACL submission" and adds line numbers. Use it only for a blind submission.
 
 ## Regenerating the figures
 
