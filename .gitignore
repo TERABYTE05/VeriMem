@@ -82,3 +82,10 @@ report/*.aux
 
 # Submission bundle: rebuild with the command in SUBMISSION.md
 VeriMem_submission.zip
+
+# A Finder duplicate of the project; kept on disk, never tracked.
+VeriMem [0-9]/
+.DS_Store
+# Downloaded model weights and their tokenizer: large, and regenerable by
+# `python -m evaluator.train`. Only the metrics and notes belong in git.
+results/**/model/
