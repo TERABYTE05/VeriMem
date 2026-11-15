@@ -79,3 +79,6 @@ report/*.pdf
 report/*.log
 report/*.blg
 report/*.aux
+
+# Submission bundle: rebuild with the command in SUBMISSION.md
+VeriMem_submission.zip
