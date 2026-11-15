@@ -17,7 +17,7 @@ from attacks.memory import DEFAULT_DOMAINS, Target
 from attacks.sources import count_poisoned, fabricate_page, poison_pool, poisoned_urls
 from eval.run_source_poisoning import CONFIGS, grade_separation
 from experience.format import Evidence, Step, Trajectory
-from experience.store import BetaTrust
+from experience.store import BetaTrust, ExperienceStore
 from retrieval.refine import Strip, TrustFilterStats, filter_by_trust
 from retrieval.store import PooledKnowledgeStore
 
@@ -189,3 +189,42 @@ def test_a_fabricated_page_reads_like_a_page() -> None:
     assert page["target_claim_id"] == "c1"
     # The claim's own wording has to be present or BM25 will never surface it.
     assert "Kochi" in " ".join(page["url2text"])
+
+
+def test_dropped_candidates_can_be_inspected() -> None:
+    """The demo shows *why* a defence removed a record, which needs the dropped ones.
+
+    `retrieve` normally returns survivors only. That is right for a results table and
+    useless for showing a reader that a defence did something, so `return_dropped` keeps
+    them with the reason and the number attached. Off by default, so no existing caller
+    changes behaviour.
+    """
+    from experience.format import Evidence as Ev
+    from experience.format import Step as St
+    from experience.format import Trajectory as Tr
+
+    history = [
+        Tr(
+            claim=f"A claim about the metro numbered {i}.",
+            verdict="Refuted",
+            rationale="r",
+            evidence=[Ev(url=f"https://untrusted{i}.example/x", text="a passage")],
+            steps=[St("retrieve", "top-5")],
+            claim_id=f"c{i}",
+            gold_label="Refuted",
+        )
+        for i in range(6)
+    ]
+    store = ExperienceStore(history, trust=BetaTrust(), trust_floor=0.99)
+
+    kept = store.retrieve("A claim about the metro numbered 2.", k=3, use_trust=True)
+    both = store.retrieve(
+        "A claim about the metro numbered 2.", k=3, use_trust=True, return_dropped=True
+    )
+
+    assert len(both) > len(kept), "dropped candidates were not returned"
+    assert all(r.kept for r in kept)
+    dropped = [r for r in both if not r.kept]
+    assert dropped, "an impossible trust floor should drop something"
+    assert all(r.dropped_by == "trust" for r in dropped)
+    assert all(r.min_trust is not None for r in dropped), "the number must survive too"

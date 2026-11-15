@@ -137,6 +137,7 @@ class ExperienceStore:
         k: int = 3,
         gate: bool = False,
         use_trust: bool = False,
+        return_dropped: bool = False,
     ) -> list[Retrieved]:
         """Top-k past trajectories for this claim, after any enabled filters.
 
@@ -192,7 +193,13 @@ class ExperienceStore:
                     self.stats.poisoned_kept += 1
 
         kept = [c for c in candidates if c.kept][:k]
-        return kept
+        if not return_dropped:
+            return kept
+        # Each dropped candidate already carries why it went and on what number; the
+        # normal path discards that, which is fine for a results table and useless for
+        # showing a reader that a defence did something. Off by default, so no existing
+        # caller changes behaviour.
+        return kept + [c for c in candidates if not c.kept]
 
     def _supports_own_verdict(self, trajectory: Trajectory) -> float:
         """Does this trajectory's evidence justify the verdict it reached?
