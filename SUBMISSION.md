@@ -30,7 +30,9 @@ only one would have concluded that either alone suffices.
 
 ```bash
 python -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt          # or: pip install torch transformers openai pyyaml python-dotenv
+pip install -r requirements.txt          # CPU: pipeline, evaluator, demo
+# training only, and Linux/WSL2 with a CUDA GPU:
+# pip install -r requirements-gpu.txt
 python -m pytest                          # 514 tests, no GPU or network needed
 ```
 
