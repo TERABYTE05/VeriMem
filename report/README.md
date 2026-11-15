@@ -72,3 +72,27 @@ grep -rl "Desktop/VeriMem" .venv/ | xargs sed -i '' \
 
 The installed packages are unaffected either way; only entry-point shebangs and the
 activate scripts carry absolute paths.
+
+
+## IEEE TAI version
+
+`verimem_tai.tex` is the submission version, formatted for **IEEE Transactions on
+Artificial Intelligence** per `TAI_template.pdf`. Build it the same way:
+
+```bash
+tectonic -X compile report/verimem_tai.tex
+```
+
+TAI's own class file (`ieeetai.cls`) is distributed only through the IEEE Author Center
+and is not on CTAN, so this uses `IEEEtran` with the `[journal]` option — the same
+two-column Transactions layout the TAI template is built on — and sets the TAI-specific
+Impact Statement manually. If you obtain `ieeetai.cls`, swap the `\documentclass` line
+and drop the `impactstatement` environment definition; nothing else changes.
+
+Two TAI-specific limits the text is written against, and which a later edit could break:
+
+- **Abstract 150–250 words, one paragraph, self-contained.** Currently 230, with no
+  citations, abbreviations or footnotes — TAI requires all three to be absent.
+- **Impact Statement ≤150 words.** Currently 135.
+
+`verimem.tex` is the earlier ACL-format version, kept for reference.
