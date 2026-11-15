@@ -1,0 +1,14 @@
+{
+  "n_examples": 56,
+  "n_skipped": 4,
+  "n_trimmed": 0,
+  "n_with_retrieval": 56,
+  "max_tokens": 1592,
+  "mean_tokens": 1246.2,
+  "verdict_counts": {
+    "Supported": 15,
+    "Conflicting evidence": 13,
+    "Not enough evidence": 13,
+    "Refuted": 15
+  }
+}

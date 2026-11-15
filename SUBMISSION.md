@@ -66,7 +66,7 @@ command per experiment.
 | `eval/` | metrics, bootstrap intervals, the experiment runners, failure analysis |
 | `verimem/` | `python -m verimem "<claim>"` — the single entry point |
 | `demo/` | the Gradio demonstration |
-| `report/` | the paper, its sources, and the figure generator |
+| `report/` | the report PDF, its figures, and the generator that builds them |
 | `results/` | one folder per experiment: config, metrics, notes, per-claim outputs |
 | `tests/` | 514 tests |
 | `handoff/` | a self-contained bundle for running an experiment on another machine |
@@ -83,6 +83,9 @@ command per experiment.
   on a consumer GPU.
 - **`cache/`** — about 1 GB of hashed model-call records. Everything re-derives from the
   code; the cache only makes a re-run fast.
+- **The report's LaTeX sources.** `report/verimem_tai.pdf` is the report; the `.tex`,
+  `.bib` and class files that produce it are in the project repository but are not part
+  of this submission.
 - **`.venv/`**, `__pycache__/`.
 
 No fabricated content is included. The attack generators are here; everything they

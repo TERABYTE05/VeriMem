@@ -1,0 +1,160 @@
+[verimem] crag in 2026-10-28_g1-rerun
+
+  500 labelled claims, 227 wrong (45.4%)
+
+  failure mode                                  n  of errors   of all
+  -----------------------------------------------------------------
+  over-abstention                             120      52.9%    24.0%
+  false confidence                             46      20.3%     9.2%
+  polarity flip despite relevant evidence      44      19.4%     8.8%
+  hedged on a decidable claim                   8       3.5%     1.6%
+  other                                         7       3.1%     1.4%
+  polarity flip on weak evidence                2       0.9%     0.4%
+
+  gold -> predicted, for the errors:
+    Refuted                -> Not enough evidence      75
+    Supported              -> Not enough evidence      45
+    Supported              -> Refuted                  26
+    Conflicting evidence   -> Refuted                  22
+    Refuted                -> Supported                20
+    Not enough evidence    -> Refuted                  11
+    Conflicting evidence   -> Supported                 9
+    Refuted                -> Conflicting evidence      6
+
+  11 of 227 errors (5%) had no strip graded above +0.3:
+  retrieval, not the verifier, is what failed in those.
+
+  error rate by the branch the router chose:
+    correct      126/295   = 42.7%
+    ambiguous     54/122   = 44.3%
+    incorrect     47/83    = 56.6%
+
+==============================================================================
+  A CORRECT VERIFICATION      claim 1
+==============================================================================
+
+  CLAIM
+    Trump Administration claimed songwriter Billie Eilish Is Destroying
+    Our Country In Leaked Documents
+
+  GOLD      Refuted
+  VERDICT   Refuted
+  ROUTER    grade 0.9927 -> correct
+
+  REASONING
+    The evidence shows that the Washington Post incorrectly attributed a
+    quote to Trump officials regarding Billie Eilish, and that the claim
+    was later corrected. There is no evidence of leaked documents from the
+    Trump Administration claiming that Billie Eilish is destroying the
+    country.
+
+  EVIDENCE (5 strips, 2784 characters)
+    +0.988  [nypost.com]
+        Citing leaked documents obtained by Democratic House
+        lawmakers, the Washington Post incorrectly wrote that the
+        Trump officials described Eilish as “not a Trump supporter,”
+        saying she is “destroying ou
+    +0.953  [nypost.com]
+        The article on Thursday — in part about hundreds of
+        celebrities being vetted for a Trump administration
+        coronavirus ad campaign — included a misattributed quote from
+        the White House about Eilish. “Don
+    +0.942  [nypost.com]
+        Back to Reading Share this: Facebook Twitter Flipboard
+        WhatsApp Email Copy Media Share this: Facebook Twitter
+        Flipboard WhatsApp Email Copy Washington Post wrongly claims
+        Trump officials said Billie E
+    +0.880  [nypost.com]
+        The headquarters of the Washington Post in Washington, DC Saul
+        Loeb/AFP via Getty Images On Friday, a correction appeared on
+        the Washington Post story. “An earlier version of this report
+        incorrectly a
+    +0.597  [nypost.com]
+        Cuomo announces mandatory COVID-19 testing for out-of-state
+        travelers Presidential race tightening as Biden lead dips in
+        battlegrounds: poll How Trump approval ratings now compare to
+        past presidents u
+
+==============================================================================
+  OVER-ABSTENTION      claim 4
+==============================================================================
+
+  CLAIM
+    Republican Matt Gaetz was part of a company that had to pay 75 million
+    in hospice fraud. They stole from dying people.
+
+  GOLD      Refuted
+  VERDICT   Not enough evidence
+  ROUTER    grade 0.9825 -> correct
+
+  REASONING
+    The evidence does not provide any information about Matt Gaetz being
+    involved in a company that paid 75 million in hospice fraud or
+    stealing from dying people.
+
+  EVIDENCE (5 strips, 1037 characters)
+    +0.866  [erau.edu]
+        He was also president of the National Hospice Organization.
+    +0.735  [ir.chemed.com]
+        Headquartered in Miami, Florida, VITAS operates 25 hospice
+        programs in eight states (California, Florida, Illinois, New
+        Jersey, Ohio, Pennsylvania, Texas, and Wisconsin).
+    +0.656  [erau.edu]
+        Gaetz said, “Connecting our high school and college enrollment
+        programs to Florida’s economic development in the aerospace
+        industry equals added value to our students, at no cost to
+        their families.” G
+    +0.422  [votingrights.news21.com]
+        And only 10 such cases over more than a decade were reported
+        to News21 by election officials and prosecutors across the
+        country.
+    -0.032  [ir.chemed.com]
+        VITAS employs more than 6,100 professionals who care for more
+        than 8,000 terminally ill patients daily, primarily in the
+        patients' homes, but also in the company's 18 hospice
+        inpatient units, as well
+
+==============================================================================
+  POLARITY FLIP DESPITE RELEVANT EVIDENCE      claim 2
+==============================================================================
+
+  CLAIM
+    Due to Imran Khan's criticism of Macron's comments on Islam, French
+    authorities cancelled the visas of 183 Pakistani citizens and deported
+    118 from the country.
+
+  GOLD      Refuted
+  VERDICT   Supported
+  ROUTER    grade 0.961 -> correct
+
+  REASONING
+    The tweets from the Consulate General of Pakistan France confirm that
+    183 visitor visas were rejected due to Imran Khan's criticism of
+    Macron's comments.
+
+  EVIDENCE (5 strips, 2741 characters)
+    +0.929  [twitter.com]
+        Consulate General Of Pakistan France Twitter ನಲ್ಲಿ: "183
+        visitor visa provided to our citizens has been found to be
+        rejected by french authorities following the criticism by PM
+        Imran khan.
+    +0.899  [twitter.com]
+        We're currently in touch with french authority to give our
+        citizens temporary stay." ವಿಷಯಕ್ಕೆ ಸ್ಕಿಪ್ ಮಾಡಿ ಹೋಮ್ ಹೋಮ್ ಹೋಮ್,
+        ಪ್ರಸ್ತುತ ಪುಟ. ಕ್ಷಣಗಳು ಕ್ಷಣಗಳು ಕ್ಷಣಗಳು, ಪ್ರಸ್ತುತ ಪುಟ. ಭಾಷೆ:
+        ಕನ್ನಡ मराठी हिन्दी
+    +0.776  [twitter.com]
+        Consulate General Of Pakistan France PakConsulateFr ಅಕ್ಟೋ 31
+        183 visitor visa provided to our citizens has been found to be
+        rejected by french authorities following the criticism by PM
+        Imran khan.
+    +0.014  [aljazeera.com]
+        Pakistan ‘s Foreign Ministry on Monday summoned the French
+        ambassador in Islamabad to complain about Macron’s comments.
+        “The seeds of hate that are being cultivated today will
+        polarise the society and
+    -0.012  [twitter.com]
+        Twitter ಗೆ ಹೊಸಬರೇ? ಸೈನ್ ಅಪ್ PakConsulateFr ಅವರ ಪ್ರೊಫೈಲ್
+        Consulate General Of Pakistan France PakConsulateFr Tweets
+        Consulate General Of Pakistan France PakConsulateFr Marseille,
+        FR ಏಪ್ರಿಲ್ 2020 ಸಮಯದಲ್
