@@ -317,8 +317,16 @@ def build(backend: Backend):
     import gradio as gr  # noqa: PLC0415
 
     # Verified to show the full sequence: correct when clean, flipped when attacked
-    # undefended, blocked when the defences are on.
-    SUGGESTED = ("0", "465")
+    # undefended, blocked when the defences are on. Re-measured 2026-11-21 by
+    # `python -m demo.find_cases --limit 70`, which shortlisted 8 full cases out of the 35
+    # it evaluated. That shortlist is written to `demo/demo_cases.json`, which is
+    # gitignored -- so these ids are kept here, in code, rather than read from it.
+    #
+    # These three recover the *correct* verdict rather than retreating to an abstention,
+    # which is the stronger thing to show. 75 leads because it is innocuous to project.
+    # Claim "0" used to be starred here and is not a demo case at all -- it never flips,
+    # so starring it invited clicking a claim mid-demo and watching nothing happen.
+    SUGGESTED = ("75", "219", "182")
     labelled = [(cid, c) for cid, c in backend.claims.items() if c.gold_label]
     ordered = [(cid, backend.claims[cid]) for cid in SUGGESTED if cid in backend.claims]
     ordered += [(cid, c) for cid, c in labelled if cid not in SUGGESTED][:400]

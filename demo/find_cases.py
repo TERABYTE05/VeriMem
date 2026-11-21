@@ -71,15 +71,18 @@ def search(backend: Backend, claims: list[Claim], rate: float, adaptive: bool) -
         checked += 1
 
         # Step 1, and the prune: no point attacking a claim already answered wrong.
-        clean = backend.run(claim, memory=True, gate=True, trust=True, rate=0.0, adaptive=False)
+        # `Backend.run` returns (trajectory, records_considered) -- the demo panel needs
+        # the records to show which were fabricated and which defence dropped them. Only
+        # the trajectory matters here.
+        clean, _ = backend.run(claim, memory=True, gate=True, trust=True, rate=0.0, adaptive=False)
         if clean.verdict != claim.gold_label:
             continue
         correct += 1
 
-        undef = backend.run(
+        undef, _ = backend.run(
             claim, memory=True, gate=False, trust=False, rate=rate, adaptive=adaptive
         )
-        defended = backend.run(
+        defended, _ = backend.run(
             claim, memory=True, gate=True, trust=True, rate=rate, adaptive=adaptive
         )
         case = Case(
